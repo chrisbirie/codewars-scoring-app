@@ -81,9 +81,11 @@ npm install
 npm run validate:preflight
 npm start
 npm run start:skip-validation
+npm run start:mock
 npm run build
 npm test
 npm run test:coverage
 npm run test:integration
 npm run test:e2e
+npm run kata:details
 ```

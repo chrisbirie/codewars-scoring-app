@@ -42,7 +42,7 @@ Primary docs sections:
 
 **App behavior with this response**
 - Iterates all pages from `0` to `totalPages - 1`
-- Filters records to configured event window (`completedAt`)
+- Filters records to configured event window (`completedAt`) and accepted languages (`completedLanguages`)
 - Uses `id` to fetch challenge details for rank and canonical name
 
 **Codewars docs**
@@ -93,7 +93,7 @@ Primary docs sections:
 ```
 
 **App behavior with this response**
-- Uses `slug` to check allow-list (`ACCEPTED_KATAS_CONFIG`)
+- Uses `id` (falling back to `slug`) to check allow-list (`ACCEPTED_KATAS_CONFIG`)
 - Uses `rank.id` to compute points via rubric map
 - Caches challenge details in `localStorage`
 - Displays configured kata `name` from `ACCEPTED_KATAS_CONFIG` on the scoreboard
