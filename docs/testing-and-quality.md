@@ -15,6 +15,8 @@ npm run test:integration
 npm run test:e2e
 npm run test:contract
 npm run validate:preflight
+npm run start:mock
+npm run kata:details
 ```
 
 First-time Playwright setup:

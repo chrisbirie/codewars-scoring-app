@@ -66,3 +66,11 @@ These control refresh cadence, localStorage cache key, and strict-vs-resilient A
 - `APP_DISPLAY_CONFIG.title`
 
 For title/branding text.
+
+## `validation.config.ts`
+
+- `requestTimeoutMs`
+- `maxConcurrency`
+- `blockServeOnFailure`
+
+Used by the preflight validation script (`npm run validate:preflight`). Controls per-request timeout, the concurrency limit for parallel API calls, and whether validation failures block the serve step. `blockServeOnFailure` defaults to `false` (warn-only); set the `STRICT_PREFLIGHT_VALIDATION=true` environment variable (via `npm run start:strict-preflight`) to override it at runtime.

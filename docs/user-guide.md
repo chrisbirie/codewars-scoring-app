@@ -13,12 +13,13 @@ This app displays a live scoreboard for a hackathon by reading Codewars completi
 
 ## What users see
 
+- Last Updated timestamp (above the table)
 - Rank
 - Team members
 - Codewars username
 - Total points
-- Completed accepted katas
-- Last refresh timestamp
+- Total katas completed
+- Most recently completed kata (name, difficulty rank, and completion time)
 
 ## How ranking works
 
@@ -48,3 +49,9 @@ npm start
 ```
 
 Open: http://localhost:4200
+
+To run with mock data (no live Codewars API calls):
+
+```bash
+npm run start:mock
+```
