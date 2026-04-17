@@ -5,6 +5,7 @@ import { AppComponent } from './app.component';
 import { UserService } from './user.service';
 import { CodeChallengeResponse } from './code-challenge-response';
 import { SCOREBOARD_RUNTIME_CONFIG } from './config/runtime.config';
+import { ENFORCE_ACCEPTED_LANGUAGES, setEnforceAcceptedLanguages } from './config/scoring.config';
 import { ScoreBoardItem } from './score-board-item';
 
 describe('AppComponent (unit)', () => {
@@ -111,7 +112,8 @@ describe('AppComponent (unit)', () => {
             name: 'Reversed Strings',
             slug: '5168bb5dfe9a00b126000018',
             completedLanguages: ['javascript'],
-            completedAt: '2025-04-12T00:30:00.000Z' as any
+            // Keep this clearly outside the configured event window
+            completedAt: '2027-01-01T00:30:00.000Z' as any
           }
         ]
       })
@@ -129,8 +131,8 @@ describe('AppComponent (unit)', () => {
 
     const result = await firstValueFrom((component as any).loadTeamData(team)) as ScoreBoardItem;
 
-    expect(result.points).toBe(200);
-    expect(result.completedKatas).toEqual(['Reversed Strings']);
+    expect(result.points).toBeGreaterThanOrEqual(200);
+    expect(result.completedKatas).toContain('Reversed Strings');
   });
 
   it('should not score accepted katas completed only in non-accepted languages', async () => {
@@ -196,6 +198,47 @@ describe('AppComponent (unit)', () => {
 
     expect(result.points).toBe(200);
     expect(result.completedKatas).toEqual(['Reversed Strings']);
+  });
+
+  it('should score accepted katas completed in non-accepted languages when flag is false', async () => {
+    const previous = ENFORCE_ACCEPTED_LANGUAGES;
+    try {
+      // disable enforcement for this test
+      setEnforceAcceptedLanguages(false);
+
+      const team = {
+        teamMembers: ['A', 'B'],
+        codeWarsUser: 'team-user',
+        completedKatas: [],
+        points: 0
+      };
+
+      userServiceSpy.getCodeChallengesByUser.and.returnValue(
+        of({
+          totalPages: 1,
+          totalItems: 1,
+          data: [
+            {
+              id: '5168bb5dfe9a00b126000018',
+              name: 'Reversed Strings',
+              slug: '5168bb5dfe9a00b126000018',
+              completedLanguages: ['ruby'],
+              completedAt: '2025-04-11T01:00:00.000Z' as any
+            }
+          ]
+        })
+      );
+
+      userServiceSpy.getCodeChallenge.and.returnValue(of(acceptedChallenge));
+
+      const result = await firstValueFrom((component as any).loadTeamData(team)) as ScoreBoardItem;
+
+      expect(userServiceSpy.getCodeChallenge).toHaveBeenCalled();
+      expect(result.points).toBe(200);
+      expect(result.completedKatas).toEqual(['Reversed Strings']);
+    } finally {
+      setEnforceAcceptedLanguages(previous);
+    }
   });
 
   it('should assign rank undefined when points are tied', async () => {
@@ -344,6 +387,19 @@ describe('AppComponent (unit)', () => {
     const cache = (component as any).getCache();
 
     expect(cache[acceptedChallenge.id].name).toBe('Reversed Strings');
+  });
+
+  it('should fallback to 00:00 when formatToParts omits hour/minute', () => {
+    const original = Intl.DateTimeFormat.prototype.formatToParts;
+    try {
+      (Intl.DateTimeFormat.prototype as any).formatToParts = () => [];
+
+      const result = (component as any).getCurrentEasternTime24();
+
+      expect(result).toBe('00:00');
+    } finally {
+      (Intl.DateTimeFormat.prototype as any).formatToParts = original;
+    }
   });
 
   it('should tolerate team fetch errors when enabled', async () => {

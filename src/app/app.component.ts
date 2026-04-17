@@ -8,7 +8,7 @@ import { ScoreboardComponent } from './scoreboard/scoreboard.component';
 import { CodeChallengeResponse } from './code-challenge-response';
 import { EVENT_WINDOW_CONFIG } from './config/event.config';
 import { SCOREBOARD_RUNTIME_CONFIG } from './config/runtime.config';
-import { ACCEPTED_KATAS_CONFIG, ACCEPTED_LANGUAGES_CONFIG, SCORE_RUBRIC_CONFIG } from './config/scoring.config';
+import { ACCEPTED_KATAS_CONFIG, ACCEPTED_LANGUAGES_CONFIG, SCORE_RUBRIC_CONFIG, ENFORCE_ACCEPTED_LANGUAGES } from './config/scoring.config';
 import { SCOREBOARD_TEAMS_CONFIG } from './config/teams.config';
 import { APP_DISPLAY_CONFIG } from './config/app-display.config';
 import { DataModeService } from './services/data-mode.service';
@@ -141,7 +141,9 @@ export class AppComponent implements OnDestroy {
             const hasAcceptedLanguage = codeChallenge.completedLanguages
               ?.some(language => this.acceptedLanguages.has(language.toLowerCase()));
 
-            return completedTime > startDate && completedTime <= endDate && !!hasAcceptedLanguage;
+            const languageAllowed = ENFORCE_ACCEPTED_LANGUAGES ? !!hasAcceptedLanguage : true;
+
+            return completedTime > startDate && completedTime <= endDate && languageAllowed;
           });
           if (page + 1 < resp.totalPages) {
             return fetchAllPages(page + 1).pipe(

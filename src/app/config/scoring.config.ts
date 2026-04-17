@@ -15,12 +15,25 @@ export const ACCEPTED_LANGUAGES_CONFIG: string[] = [
   'python',
 ];
 
+// When true, only completed kata submissions in one of the
+// `ACCEPTED_LANGUAGES_CONFIG` languages will count towards scoreboard points.
+// When false, accepted katas count regardless of the language used; the
+// completed language is still displayed in the admin UI.
+export let ENFORCE_ACCEPTED_LANGUAGES = false;
+
+// Setter helper for tests and runtime toggles. Imports are read-only bindings
+// in ES modules, so tests should call this setter rather than attempting to
+// assign to the imported binding directly.
+export function setEnforceAcceptedLanguages(value: boolean): void {
+  ENFORCE_ACCEPTED_LANGUAGES = value;
+}
 export interface AcceptedKataConfig {
   name: string;
   slug: string;
 }
 
 export const ACCEPTED_KATAS_CONFIG: AcceptedKataConfig[] = [
+{ name: 'Convert a Number to a String!', slug: '5265326f5fda8eb1160004c8' }, //delete this
 { name: 'Multiples of 3 or 5', slug: '514b92a657cdc65150000006' },
 { name: 'Reversed Strings', slug: '5168bb5dfe9a00b126000018' },
 { name: 'Reverse words', slug: '51c8991dee245d7ddf00000e' },

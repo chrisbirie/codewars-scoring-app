@@ -1,5 +1,5 @@
 import { CODEWARS_API_CONFIG } from '../src/app/config/api.config';
-import { ACCEPTED_KATAS_CONFIG, ACCEPTED_LANGUAGES_CONFIG } from '../src/app/config/scoring.config';
+import { ACCEPTED_KATAS_CONFIG, ACCEPTED_LANGUAGES_CONFIG, ENFORCE_ACCEPTED_LANGUAGES } from '../src/app/config/scoring.config';
 import { SCOREBOARD_TEAMS_CONFIG } from '../src/app/config/teams.config';
 import { VALIDATION_CONFIG } from '../src/app/config/validation.config';
 
@@ -156,6 +156,13 @@ async function main(): Promise<void> {
 
   console.log('Running preflight validation...');
   console.log(`Base URL: ${baseUrl}`);
+  // Note: the `ENFORCE_ACCEPTED_LANGUAGES` runtime flag controls whether the
+  // scoreboard counts submissions made in non-accepted languages. The
+  // preflight validation ALWAYS checks that each accepted kata is available
+  // in all `ACCEPTED_LANGUAGES_CONFIG` languages and reports missing
+  // languages regardless of that flag. Log the enforcement setting here
+  // for operator visibility.
+  console.log(`ENFORCE_ACCEPTED_LANGUAGES: ${ENFORCE_ACCEPTED_LANGUAGES}`);
   console.log(`Accepted languages: ${acceptedLanguages.join(', ')}`);
 
   await validateTeams(baseUrl, failures);

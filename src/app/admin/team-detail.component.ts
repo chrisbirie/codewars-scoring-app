@@ -8,7 +8,7 @@ import { SCOREBOARD_TEAMS_CONFIG } from '../config/teams.config';
 import { Subscription, Observable, of, forkJoin } from 'rxjs';
 import { mergeMap, map, catchError } from 'rxjs/operators';
 import { EVENT_WINDOW_CONFIG } from '../config/event.config';
-import { ACCEPTED_KATAS_CONFIG, ACCEPTED_LANGUAGES_CONFIG, SCORE_RUBRIC_CONFIG } from '../config/scoring.config';
+import { ACCEPTED_KATAS_CONFIG, ACCEPTED_LANGUAGES_CONFIG, SCORE_RUBRIC_CONFIG, ENFORCE_ACCEPTED_LANGUAGES } from '../config/scoring.config';
 
 type SortField = 'name' | 'completedAt' | 'difficulty' | 'points';
 type SortDirection = 'asc' | 'desc';
@@ -149,7 +149,9 @@ export class TeamDetailComponent implements OnInit, OnDestroy {
       ?.some((language) => this.acceptedLanguages.has(language.toLowerCase()));
     const isAcceptedKata = this.acceptedKataSlugs.has(challenge.id) || this.acceptedKataSlugs.has(challenge.slug);
 
-    return inEventWindow && !!hasAcceptedLanguage && isAcceptedKata;
+    const languageAllowed = ENFORCE_ACCEPTED_LANGUAGES ? !!hasAcceptedLanguage : true;
+
+    return inEventWindow && languageAllowed && isAcceptedKata;
   }
 
   sort(field: SortField) {

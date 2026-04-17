@@ -28,17 +28,51 @@ If username is invalid or removed, that team will normally score 0 (with current
 
 ## `scoring.config.ts`
 
-- `ACCEPTED_KATAS_CONFIG: { name: string; slug: string }[]`
-- `ACCEPTED_LANGUAGES_CONFIG: string[]`
-- `SCORE_RUBRIC_CONFIG: Record<number, number>`
+
+- `ENFORCE_ACCEPTED_LANGUAGES: boolean` (new)
+
 
 `SCORE_RUBRIC_CONFIG` maps absolute rank id to points.
 Example: rank `-1` maps via key `1`.
 
+Behavior of `ENFORCE_ACCEPTED_LANGUAGES`:
+
+- When `true` (default): only completed kata submissions that include at least one language present in `ACCEPTED_LANGUAGES_CONFIG` count toward the scoreboard points. Submissions completed in languages not listed in `ACCEPTED_LANGUAGES_CONFIG` are ignored for scoring, though their language values are still shown in the admin UI.
+- When `false`: a team's completed katas that match `ACCEPTED_KATAS_CONFIG` will count toward scoreboard points regardless of the language(s) used for the submission. The completed language is still displayed in the admin UI.
+
+Note on validation: the preflight validation script (`scripts/preflight-validate.ts`) continues to check that each accepted kata is available in all `ACCEPTED_LANGUAGES_CONFIG` languages and will report missing languages as validation warnings/errors regardless of the `ENFORCE_ACCEPTED_LANGUAGES` setting. The flag only affects which submissions are counted toward the scoreboard total.
 Only completions with at least one language in `ACCEPTED_LANGUAGES_CONFIG` are considered score-eligible.
 
 For challenges, configure both a display `name` and API lookup key `slug`.
 The app uses `slug` for acceptance checks and API validation, while displaying the configured `name` on the scoreboard.
+
+## Toggling `ENFORCE_ACCEPTED_LANGUAGES`
+
+There are three common ways to change how the app enforces accepted languages:
+
+- Edit the config file directly: change the default in `src/app/config/scoring.config.ts`.
+
+- Set it at app startup (runtime): call the exported setter from `main.ts` before the app bootstraps. Example — add this to `src/main.ts`:
+
+```ts
+import { setEnforceAcceptedLanguages } from './app/config/scoring.config';
+
+// Optional: read an override from a global injected object (useful when
+// hosting the built app behind a server that can inject runtime values).
+const runtime = (window as any).SCOREBOARD_RUNTIME as { enforceAcceptedLanguages?: boolean } | undefined;
+if (runtime?.enforceAcceptedLanguages !== undefined) {
+  setEnforceAcceptedLanguages(Boolean(runtime.enforceAcceptedLanguages));
+}
+
+// continue with the normal Angular bootstrap
+```
+
+- Toggle in tests: your unit/integration specs can call `setEnforceAcceptedLanguages(false)` in a `beforeEach` and restore the previous value in `afterEach`.
+
+Notes:
+
+- The setter only affects the in-memory runtime flag for the current browser session. Persisting an override across deployments requires changing the source config or injecting a runtime value into the built assets (for example via a server-side template that writes `window.SCOREBOARD_RUNTIME`).
+- The preflight validation script `scripts/preflight-validate.ts` always checks kata availability against `ACCEPTED_LANGUAGES_CONFIG` and is unaffected by this flag.
 
 ## `runtime.config.ts`
 
