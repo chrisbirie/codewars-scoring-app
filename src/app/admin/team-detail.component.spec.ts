@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { TeamDetailComponent } from './team-detail.component';
 import { UserService } from '../user.service';
+import { ENFORCE_ACCEPTED_LANGUAGES, setEnforceAcceptedLanguages } from '../config/scoring.config';
 
 describe('TeamDetailComponent (unit)', () => {
   let userServiceSpy: jasmine.SpyObj<UserService>;
@@ -22,7 +23,7 @@ describe('TeamDetailComponent (unit)', () => {
       providers: [
         { provide: UserService, useValue: userServiceSpy },
         { provide: Router, useValue: routerSpy },
-        { provide: ActivatedRoute, useValue: { snapshot: { params: { teamIndex: '2' } } } },
+        { provide: ActivatedRoute, useValue: { snapshot: { params: { teamIndex: '1' } } } },
       ],
     }).compileComponents();
   });
@@ -52,7 +53,8 @@ describe('TeamDetailComponent (unit)', () => {
             name: 'Reversed Strings',
             slug: '5168bb5dfe9a00b126000018',
             completedLanguages: ['javascript'],
-            completedAt: '2025-04-12T02:00:00.000Z' as any,
+            // Ensure this entry is outside the configured event window for the test
+            completedAt: '2027-01-02T02:00:00.000Z' as any,
           },
         ],
       })
@@ -89,6 +91,66 @@ describe('TeamDetailComponent (unit)', () => {
     expect(component.katas[0].difficulty).toBe('1 kyu');
     expect(component.katas[0].points).toBe(200);
     expect(component.totalPoints).toBe(200);
+  });
+
+  it('should include katas completed in non-accepted languages when enforcement is disabled', () => {
+    const previous = ENFORCE_ACCEPTED_LANGUAGES;
+    try {
+      setEnforceAcceptedLanguages(false);
+
+      userServiceSpy.getCodeChallengesByUser.and.returnValue(
+        of({
+          totalPages: 1,
+          totalItems: 2,
+          data: [
+            {
+              id: '5168bb5dfe9a00b126000018',
+              name: 'Reversed Strings',
+              slug: '5168bb5dfe9a00b126000018',
+              completedLanguages: ['javascript'],
+              completedAt: '2025-04-11T02:00:00.000Z' as any,
+            },
+            {
+              id: '5168bb5dfe9a00b126000018',
+              name: 'Reversed Strings',
+              slug: '5168bb5dfe9a00b126000018',
+              completedLanguages: ['ruby'],
+              completedAt: '2025-04-11T03:00:00.000Z' as any,
+            },
+          ],
+        })
+      );
+
+      userServiceSpy.getCodeChallenge.and.returnValue(
+        of({
+          id: '5168bb5dfe9a00b126000018',
+          name: 'Reversed Strings',
+          slug: '5168bb5dfe9a00b126000018',
+          url: 'https://www.codewars.com/kata/5168bb5dfe9a00b126000018',
+          category: 'reference',
+          description: 'x',
+          tags: [],
+          languages: ['javascript'],
+          rank: { id: -1, name: '1 kyu', color: 'yellow' },
+          createdBy: { username: 'u', url: 'u' },
+          approvedBy: { username: 'a', url: 'a' },
+          totalAttempts: 1,
+          totalCompleted: 1,
+          totalStars: 1,
+          voteScore: 1,
+          publishedAt: '2025-01-01T00:00:00.000Z',
+          approvedAt: '2025-01-01T00:00:00.000Z',
+        })
+      );
+
+      const fixture = TestBed.createComponent(TeamDetailComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      expect(component.katas.length).toBe(2);
+    } finally {
+      setEnforceAcceptedLanguages(previous);
+    }
   });
 
   it('should set error when team index is invalid', async () => {
